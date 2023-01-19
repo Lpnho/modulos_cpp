@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# clang++ $SRC.cpp
+# -std=c++2a -stdlib=libc++ -fmodules
+# -fbuiltin-module-map
+# --precompile -o OUT.pcm
+# -fprebuilt-module-path=
+
+FLAGS="-std=c++2a -stdlib=libc++ -fmodules"
+
+PROG_SRC_DIR=./src
+MOD_SRC_DIR=./src/modules
+
+PROG_BUILD_DIR=./build
+MOD_BUILD_DIR=./build/modules
+
+PROG_EXT=cpp
+MOD_EXT=cppm
+
+MODULES[0]=frs
+MODULES[1]=snd
+PROGRAM[0]=main
+
+MAIN=main
+
+BUILDER_MODULES_STRING=""
+
+for mod in ${MODULES[@]}; do
+    BUILDER_MODULES_STRING+=$MOD_BUILD_DIR/$mod.pcm" "
+done
+
+compile_modules_with_std_headers() {
+    for mod in ${MODULES[@]}; do
+        clang++ $MOD_SRC_DIR/$mod.$MOD_EXT $FLAGS -fbuiltin-module-map --precompile -o $MOD_BUILD_DIR/$mod.pcm
+    done
+}
+compile_program_using_modules() {
+    for prog in ${PROGRAM[@]}; do
+        clang++ $PROG_SRC_DIR/$prog.$PROG_EXT $FLAGS -fbuiltin-module-map -fprebuilt-module-path=$MOD_BUILD_DIR $BUILDER_MODULES_STRING -o $PROG_BUILD_DIR/$prog
+    done
+}
+
+if [ -v $1 ]; then
+    compile_modules_with_std_headers
+    compile_program_using_modules
+    ./build/$MAIN
+
+elif [ $1 == "start" ]; then
+    mkdir ./build ./src ./build/modules ./src/modules
+
+elif [ $1 == "run" ]; then
+    ./build/$2
+
+elif [ $1 == "clean" ]; then
+    rm -rf ./build
+    mkdir ./build ./build/modules
+
+elif [ $1 == "build" ]; then
+    compile_modules_with_std_headers
+    compile_program_using_modules
+
+elif [ $1 == "cbuild" ]; then
+    rm -rf ./build
+    mkdir ./build ./build/modules
+    compile_modules_with_std_headers
+    compile_program_using_modules
+
+elif [ $1 == "build-mods" ]; then
+    compile_modules_with_std_headers
+
+elif [ $1 == "build-progs" ]; then
+    compile_program_using_modules
+
+elif [ $1 == "build-module" ]; then
+    clang++ $MOD_SRC_DIR/$2.$MOD_EXT $FLAGS -fbuiltin-module-map --precompile -o $MOD_BUILD_DIR/$2.pcm
+
+elif [ $1 == "build-program" ]; then
+    clang++ $PROG_SRC_DIR/$2.$PROG_EXT $FLAGS -fbuiltin-module-map -fprebuilt-module-path=$MOD_BUILD_DIR $BUILDER_MODULES_STRING -o $PROG_BUILD_DIR/$2
+fi
