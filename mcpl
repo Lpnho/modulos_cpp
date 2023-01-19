@@ -14,13 +14,20 @@ MOD_SRC_DIR=./src/modules
 PROG_BUILD_DIR=./build
 MOD_BUILD_DIR=./build/modules
 
+
+
+# file extensions 
 PROG_EXT=cpp
 MOD_EXT=cppm
 
+
+# modules to precompile and add in building 
 MODULES[0]=frs
 MODULES[1]=snd
+
 PROGRAM[0]=main
 
+# run start point
 MAIN=main
 
 BUILDER_MODULES_STRING=""
